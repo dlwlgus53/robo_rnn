@@ -1,0 +1,121 @@
+# MNSIT code for Dropout paper
+from __future__ import print_function
+import matplotlib
+matplotlib.use('Agg')
+
+import os
+import argparse
+import shutil
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torchvision import datasets, transforms
+from torch.autograd import Variable
+
+import numpy as np
+import csv
+import time
+import sys
+
+from matplotlib import pyplot as plt
+from sklearn.metrics import f1_score, accuracy_score
+from sklearn.metrics import precision_recall_fscore_support as f1_metrics
+
+def train_main(model, args, train_loader, test_loader, optimizer):
+    patience = args.patience
+    bad_counter = 0
+    best_f1 = 0
+
+    for epoch in range(1, args.epochs + 1):
+        train_loss = train(model, epoch, train_loader, optimizer, args)
+        
+        if epoch % args.val_freq == 0: # at each valid frequency
+            acc, f1 = test(model, args, test_loader)
+            print('-' * 90)
+            print("epoch {:d} | acc {:.2f} | f1 {:.2f}".format(epoch, acc, f1))
+            print('-' * 90)
+            
+            if f1 > best_f1:    
+                best_f1 = f1
+                print("Found Best Model")
+                save_checkpoint(model, True, args)
+                #bad_counter = 0
+            
+            else:
+                bad_counter += 1
+            
+            if bad_counter > patience :
+                # e-stop
+                print('Early Stopping...')
+                break
+    
+
+def train(model, epoch, train_loader, optimizer, args):
+    loss_ = 0
+    train_loss = 0
+    log_interval = 300
+
+    model.train()
+
+    for batch_idx, (data, target) in enumerate(train_loader):
+        data, target = data.to(args.device), target.to(args.device).squeeze()
+
+        optimizer.zero_grad()
+        output = model(data)
+        loss = F.cross_entropy(output,target)
+        loss.backward()
+        optimizer.step()
+        loss_ += loss.item()
+        train_loss += loss.item()
+
+        if batch_idx % log_interval == (log_interval-1):
+            print("batch_idx {:d} | loss {:.6f}".format(batch_idx+1, loss_ / log_interval))
+            loss_ = 0
+
+    return train_loss / (batch_idx + 1)
+
+def test(model, args, test_loader, valid=1):
+    model.eval()
+    correct = 0
+    flag = 0
+
+    if valid:
+        with torch.no_grad():
+            for data, target in test_loader:
+                data, target = data.to(args.device), target.to(args.device).long()
+                output = model(data)
+                
+                if flag:
+                    prediction_ = torch.argmax(output, dim=1)
+                    prediction = torch.cat((prediction, prediction_), 0)
+                    
+                    targets = torch.cat((targets, target), 0)
+            
+                else:
+                    prediction = torch.argmax(output, dim=1)
+                    targets = target
+                    flag = 1
+
+            targets = targets.cpu()
+            prediction = prediction.cpu()
+            acc = accuracy_score(targets, prediction)
+            f1 = f1_score(targets, prediction, average="binary")
+            
+        return acc, f1
+
+def save_checkpoint(model, is_best, args):    
+    if not os.path.exists(args.saveto):
+         print('Make Results Directory (Path: {})'.format(args.saveto))
+         os.makedirs(args.saveto)
+
+    filename = str(args.expName) + '.pth'
+
+    path = os.path.join(args.saveto, filename)
+    torch.save(model, path)
+    if is_best:
+        shutil.copyfile(path, path + '.best')
+
+if __name__ == '__main__':
+    pass

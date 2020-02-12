@@ -1,0 +1,85 @@
+import os
+import random
+import numpy as np
+import argparse
+import pandas as pd
+import sys
+
+import torch
+from torch.utils.data import Dataset, DataLoader
+from sklearn.utils import shuffle
+
+def trim_data(data, horizon):
+	'''
+	args 
+	data : npndarray, input and target combined
+	horizon : int
+
+	1) discard rows w/ zero length
+	2) add zero padding for rows w/ length less
+	3) trim parts of rows that exceed sequence length
+	
+	out : trimmed input, and target data
+	'''
+
+	trimmed_rows = []
+	targets = []
+
+	for n in range(data.shape[0]):
+		trimmed_row = []
+		target = 0 # temporary init
+		throw = 0
+		
+		for i in range(horizon):
+			# first entry is nan
+			if np.isnan(data[n,i]) and i==0:
+				throw = 1
+				break
+			
+			# other entries are nan
+			if np.isnan(data[n,i]):
+				trimmed_row.append(0.)
+			else:
+				# normal entry
+				trimmed_row.append(data[n,i].item())
+		
+		if throw == 0:
+			trimmed_rows.append(trimmed_row)
+			targets.append(data[n,-1].item())
+	
+	x = np.vstack(trimmed_rows)
+	y = np.vstack(targets)
+    print("hello")
+	return x, y
+
+class StasDataset(Dataset):
+	def __init__(self, csv_path, horizon):
+		df_data = pd.read_csv(csv_path)
+		#data = np.asarray(df_data, dtype=np.float32)
+		data = np.asarray(df_data)
+        #data = data[:,2:].astype(np.float32)
+	
+		self.horizon = horizon
+		x, y = trim_data(data, horizon)
+
+		self.y = y.astype('int32').reshape(-1, 1)
+		self.x = x.astype('float32')
+
+		print("input data matrix shape", self.x.shape)
+		print("target data shape", self.y.shape)
+
+	def __getitem__(self, index):
+			return torch.from_numpy(self.x[index]).type(torch.float32),\
+					torch.from_numpy(self.y[index]).type(torch.long)
+
+	def __len__(self):
+			return self.x.shape[0]
+
+	def getInputSize(self):
+			return self.horizon
+
+if __name__ == "__main__":
+	data_path = "../data/"
+	csv_path = os.path.join(data_path, "ta_data.csv")
+
+	trainset = StasDataset(csv_path, 10)

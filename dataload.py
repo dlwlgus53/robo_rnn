@@ -130,7 +130,7 @@ class BatchDataset():
 
 if __name__ == "__main__":
     data_path = "../data/norm"
-    csv_path = os.path.join(data_path, "sample.csv")
+    csv_path = os.path.join(data_path, "train.csv")
     
     sample = BatchDataset(csv_path, batch_size =5, limit = 10)
     X,X_mask, Y = sample.getBatch(3)

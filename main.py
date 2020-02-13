@@ -18,9 +18,9 @@ import os
 parser = argparse.ArgumentParser(description='NI: Stas Action Classification')
 parser.add_argument('--data', type=str, default="norm",
                     help='dataset for experiments varied by charactersitic of dummies (dummy, dummy0.2, dummy0.1, dummy2)')
-parser.add_argument('--batch_size', type=int, default=16, metavar='N',
+parser.add_argument('--batch_size', type=int, default=2, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--epochs', type=int, default=3000, metavar='N',
+parser.add_argument('--epochs', type=int, default=1, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--optim', type=str, default="RMSprop")
 parser.add_argument('--lr', type=float, metavar='LR', default=0.001,
@@ -29,6 +29,10 @@ parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--patience', type=int, default=3, metavar='P',
                     help='Early Stopping Patience')
+
+parser.add_argument('--limit', type=int, default=10,
+                    help='limit of looking day')
+
 
 parser.add_argument('--val_freq', type=int, default=1, metavar='VF',
                     help='Validation Test Frequency')
@@ -48,16 +52,14 @@ args = parser.parse_args()
 args.device = torch.device("cuda")
 args.test_batch_size = args.batch_size
 
-csv_path = os.path.join("../data", args.data, "train.csv")
-train_data = BatchDataset(csv_path, args.batch_size)
+csv_path = os.path.join("../data", args.data, "sample.csv")
+train_data = BatchDataset(csv_path, args.batch_size, args.limit)
 
+csv_path = os.path.join("../data", args.data, "sample.csv")
+valid_data = BatchDataset(csv_path, args.batch_size, args.limit)
 
-
-csv_path = os.path.join("../data", args.data, "valid.csv")
-valid_data = BatchDataset(csv_path, args.batch_size)
-
-csv_path = os.path.join("../data", args.data, "test.csv")
-test_data = BatchDataset(csv_path, args.batch_size)
+csv_path = os.path.join("../data", args.data, "sample.csv")
+test_data = BatchDataset(csv_path, args.batch_size, args.limit)
 
 
 '''

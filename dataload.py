@@ -42,7 +42,7 @@ class BatchDataset():
         start = i*self.batch_size
         end = (i+1)*self.batch_size
 
-        batchedX = self.padding(self.df_np[start:end,:-1])
+        batchedX = np.nan_to_num(self.padding(self.df_np[start:end,:-1]))
         batchedY = self.df_np[start:end,-1]
 
         maskX = self.masking(batchedX, batchedX.shape[0], batchedX.shape[1])

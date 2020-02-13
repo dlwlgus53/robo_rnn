@@ -10,14 +10,26 @@ import sys
 class RNN(nn.Module):
     def __init__(self, args):
         super(RNN, self).__init__()
-        self.rnn = torch.nn.LSTM(args.input_dim,args.hidden_dim, args.layers, batch_first=True) #TODO dropout?
+        self.rnn = torch.nn.LSTM(args.input_dim,args.hidden_dim, args.layers, batch_first=True) 
         self.fc = torch.nn.Linear(args.hidden_dim, args.output_dim, bias=True)
-
+        self.batch_size = args.batch_size
     def forward(self, x):
         x, _status = self.rnn(x)
-        x= self.fc(x[:, -1, :])#TODO output of rnn 
-        x = F.softmax(x, dim=1)
-        return x
+        print(x.shape) 
+        after_fc = [[] for n in range(x.shape[0])]
+        for i in range(x.shape[0]):#batch size
+            for j in range(x.shape[1]):
+                after_fc[i].append(self.fc(x[i,j,:]))
+        
+        
+        after_softmax = [[] for n in range(x.shape[0])]
+        for i in range(x.shape[0]):
+            for j in range(x.shape[1]):
+                temp = F.softmax(after_fc[i][j], dim=0)
+                after_softmax[i].append(temp)
+        
+        #print(after_softmax)
+        return after_softmax
 
 
 class DNN(nn.Module):

@@ -41,11 +41,12 @@ class BatchDataset():
 
         start = i*self.batch_size
         end = (i+1)*self.batch_size
-
+        
+        rawX = self.df_np[start:end,:-1]
         batchedX = np.nan_to_num(self.padding(self.df_np[start:end,:-1]))
         batchedY = self.df_np[start:end,-1]
 
-        maskX = self.masking(batchedX, batchedX.shape[0], batchedX.shape[1])
+        maskX = self.masking(rawX, batchedX.shape[0], batchedX.shape[1])
         
         # batchX, maskX, batchY
         return torch.from_numpy(np.vstack(batchedX)).type(torch.float32), torch.from_numpy(np.vstack(maskX)).type(torch.float32),\

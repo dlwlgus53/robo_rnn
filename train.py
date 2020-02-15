@@ -30,18 +30,26 @@ def copy_target(target,length):
     long_target = torch.from_numpy(np_target * for_expand)
     long_target = long_target.view(np_target.shape[0],length,-1)
     long_target = long_target.type(torch.cuda.LongTensor)
-    print(long_target)
     
     return long_target.cuda()
 
-def get_loss(output, target):
+def get_loss(output, target, mask):
     losses = [[]*n for n in range(target.shape[0])]
     for i in range(target.shape[0]):
         for j in range(target.shape[1]):
-            print(output[i][j].unsqueeze(0), target[i][j])
             loss = F.cross_entropy(output[i][j].unsqueeze(0), target[i][j])
             losses[i].append(loss)
-    return losses
+   
+    mask_loss = [[]*n for n in range(target.shape[0])]
+    for i in range (target.shape[0]):
+        masked = torch.as_tensor(losses[i]).cuda() * torch.as_tensor(mask[i]).cuda()
+        mask_loss[i].append(masked)
+    
+    print("mask")
+    print(mask)
+    print("masked loss")
+    print(mask_loss)
+    return mask_loss
 
 
 def train_main(model, args, train_data, test_data, optimizer):
@@ -95,15 +103,18 @@ def train(model, epoch, train_data, optimizer, args):
         output = model(data)
 
         long_target = copy_target(target, len)
-        losses = get_loss(output, long_target)
+        losses = get_loss(output, long_target, mask)
+        print("losses zero")
+        print(np.shape(losses))
+        print(losses[0])
         #target = target.view(1, batch_size).squeeze()
         #loss = F.cross_entropy(output,target)#TODO right??
-        
+        ''' 
         loss.backward()
         optimizer.step()
         loss_ += loss.item()
         train_loss += loss.item()
-        
+        '''  
         '''
         loss_ = criterion(output_flat, y.view(-1))
         loss = torch.sum(loss*mask)
@@ -112,9 +123,7 @@ def train(model, epoch, train_data, optimizer, args):
         
         backward() where..?
         '''
-        if batch_idx % log_interval == (log_interval-1):
-            print("batch_idx {:d} | loss {:.6f}".format(batch_idx+1, loss_ / log_interval))
-            loss_ = 0
+        loss_ = 0
 
 
 

@@ -18,7 +18,7 @@ import os
 parser = argparse.ArgumentParser(description='NI: Stas Action Classification')
 parser.add_argument('--data', type=str, default="norm",
                     help='dataset for experiments varied by charactersitic of dummies (dummy, dummy0.2, dummy0.1, dummy2)')
-parser.add_argument('--batch_size', type=int, default=2, metavar='N',
+parser.add_argument('--batch_size', type=int, default=10, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--epochs', type=int, default=1, metavar='N',
                     help='number of epochs to train (default: 10)')
@@ -52,7 +52,7 @@ args = parser.parse_args()
 args.device = torch.device("cuda")
 args.test_batch_size = args.batch_size
 
-csv_path = os.path.join("../data", args.data, "sample.csv")
+csv_path = os.path.join("../data", args.data, "train.csv")
 train_data = BatchDataset(csv_path, args.batch_size, args.limit)
 
 csv_path = os.path.join("../data", args.data, "sample.csv")

@@ -17,16 +17,21 @@ class BatchDataset():
         np.random.shuffle(self.df_np)    #TODO if test do not shuffle
         
         self.datalen = self.df_np.shape[0]
-        self.n_batches = int(self.datalen / self.batch_size)
-        
+        self.n_batches = int(self.datalen / self.batch_size)-1
+        self.n_num = self.get_n_of_nums()
         self.report()
 
+    def get_n_of_nums(self):
+        sum = 0
+        for n in range(self.datalen):
+            sum += np.count_nonzero(~np.isnan(self.df_np[n,:]))
+        return sum
 
         #remove wrong data from raw data(empty data)
     def remove_wrong_data(self,data):
         cleans = []
         for n in range(data.shape[0]):
-            if np.isnan(data[n,0]):
+            if np.isnan(data[n,0:2]).any(): #TODO checking 
                 continue
             cleans.append(data[n,:])
         return np.vstack(cleans)

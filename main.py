@@ -20,12 +20,12 @@ parser.add_argument('--data', type=str, default="norm",
                     help='dataset for experiments varied by charactersitic of dummies (dummy, dummy0.2, dummy0.1, dummy2)')
 parser.add_argument('--batch_size', type=int, default=10, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--epochs', type=int, default=1, metavar='N',
+parser.add_argument('--epochs', type=int, default=10, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--optim', type=str, default="RMSprop")
 parser.add_argument('--lr', type=float, metavar='LR', default=0.001,
                     help='learning rate (no default)')
-parser.add_argument('--log-interval', type=int, default=10, metavar='N',
+parser.add_argument('--log-interval', type=int, default=1, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--patience', type=int, default=3, metavar='P',
                     help='Early Stopping Patience')
@@ -55,10 +55,10 @@ args.test_batch_size = args.batch_size
 csv_path = os.path.join("../data", args.data, "train.csv")
 train_data = BatchDataset(csv_path, args.batch_size, args.limit)
 
-csv_path = os.path.join("../data", args.data, "sample.csv")
+csv_path = os.path.join("../data", args.data, "valid.csv")
 valid_data = BatchDataset(csv_path, args.batch_size, args.limit)
 
-csv_path = os.path.join("../data", args.data, "sample.csv")
+csv_path = os.path.join("../data", args.data, "test.csv")
 test_data = BatchDataset(csv_path, args.batch_size, args.limit)
 
 
@@ -82,9 +82,6 @@ for n in range(n_exp):
 
     optimizer = "optim." + args.optim
     optimizer = eval(optimizer)(model.parameters(), lr=args.lr)
-    #optimizer = optim.RMSprop(model.parameters())
-    #optimizer = optim.Adam(model.parameters())
-    #oprimizer = optim.SGD(model.parameters())
 
     print("Setting optimizer Complete")
 
@@ -97,21 +94,24 @@ for n in range(n_exp):
 print("=" * 90)
 print("results on testset at each trials:")
 
-for i in range(n_exp):
-    print("exp {:d} | acc {:.3f} | f1 {:.3f}".format(i+1, accs[i], f1s[i]))
-
+for i in range(n_exp):    
+    print("acc, f1")
+    print(accs[i])
+    print(f1s[i])
+'''
 total_acc = sum(accs) / n_exp
 total_f1 = sum(f1s) / n_exp
-
+'''
+'''
 print("-" * 90)
 print("total scores")
 print("acc {:.3f} | f1 {:.3f}".format(sum(accs)/n_exp, sum(f1s)/n_exp))
 print("=" * 90)
-
+'''
 # make logs of results
 
-
+'''
 with open(os.path.join(args.saveto, args.expName + ".result"), 'a') as fp:
     #fp.write(str(optim) + ',' + str(args.lr) + ',' + hiddens + ',' + str(args.patience) + ',' + str(args.batch_size) + ','+ str(total_acc) ',' + str(total_f1))
     fp.write("{:s},{:f},{:d},{:d},{:f},{:f}\n".format(args.optim, args.lr, args.patience, args.batch_size, total_acc, total_f1))
-
+'''

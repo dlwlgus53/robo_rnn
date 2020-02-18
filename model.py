@@ -14,20 +14,39 @@ class RNN(nn.Module):
         self.fc = torch.nn.Linear(args.hidden_dim, args.output_dim, bias=True)
         self.batch_size = args.batch_size
     def forward(self, x):
-        x, _status = self.rnn(x)
-        print(x.shape) 
+        try : 
+            x, _status = self.rnn(x)
+        except :
+            import pdb; pdb.set_trace()
         after_fc = [[] for n in range(x.shape[0])]
         for i in range(x.shape[0]):#batch size
-            for j in range(x.shape[1]):
+            for j in range(x.shape[1]):#day limit length
                 after_fc[i].append(self.fc(x[i,j,:]))
-        
-        
+                '''
+                if j == 0:
+                    after_fc[i] = self.fc(x[i,j,:])
+                else : 
+                    after_fc[i] = torch.cat((after_fc[i],self.fc(x[i,j,:])))
+                '''
+            
         after_softmax = [[] for n in range(x.shape[0])]
-        for i in range(x.shape[0]):
-            for j in range(x.shape[1]):
+        for i in range(x.shape[0]):#batch size
+            for j in range(x.shape[1]):# day limit length
                 temp = F.softmax(after_fc[i][j], dim=0)
                 after_softmax[i].append(temp)
-        
+                 
+                #print(F.softmax(after_fc[i][j], dim=0))
+                '''
+                if j==0:
+                    after_softmax[i] = (F.softmax(after_fc[i][j],dim =0)).unsqueeze(0)
+                else :
+                    print(after_softmax[i])
+                    print(F.softmax(after_fc[i][j],dim=0))
+                    print(after_softmax[i].size())
+                    after_softmax[i] = torch.cat((after_softmax[i], F.softmax(after_fc[i][j],dim=0)))
+                '''
+
+
         #print(after_softmax)
         return after_softmax
 
